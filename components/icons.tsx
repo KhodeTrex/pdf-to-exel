@@ -1,8 +1,7 @@
-
 import React from 'react';
 
-export const PdfIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-red-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+export const PdfIcon: React.FC<{className?: string}> = ({ className = "text-red-500" }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={`h-7 w-7 flex-shrink-0 ${className}`} viewBox="0 0 20 20" fill="currentColor">
         <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V8.414a1 1 0 00-.293-.707l-4.414-4.414A1 1 0 0011.586 3H4zm3 1a1 1 0 000 2h6a1 1 0 100-2H7zM7 7a1 1 0 000 2h6a1 1 0 100-2H7zM7 11a1 1 0 100 2h3a1 1 0 100-2H7z" clipRule="evenodd" />
     </svg>
 );

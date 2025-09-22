@@ -23,10 +23,25 @@ const schema = {
 };
 
 export async function convertPdfTextToTableData(pdfText: string): Promise<TableData> {
-  if (!process.env.API_KEY) {
-    throw new Error("API_KEY environment variable is not set. The application cannot connect to the AI service.");
+  const apiKey = (typeof process !== 'undefined' && process.env.API_KEY) ? process.env.API_KEY : null;
+
+  if (!apiKey) {
+    console.warn("API_KEY environment variable is not set. Returning mock data for demonstration purposes.");
+    // Simulate network delay to mimic processing time
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    return {
+      headers: ["شرح کالا", "تعداد", "قیمت واحد (ریال)", "مبلغ کل (ریال)"],
+      rows: [
+        ["مانیتور ۲۴ اینچ", "۲", "۵۰,۰۰۰,۰۰۰", "۱۰۰,۰۰۰,۰۰۰"],
+        ["کیبورد مکانیکی", "۵", "۸,۵۰۰,۰۰۰", "۴۲,۵۰۰,۰۰۰"],
+        ["ماوس بی‌سیم", "۱۰", "۳,۰۰۰,۰۰۰", "۳۰,۰۰۰,۰۰۰"],
+        ["هارد اکسترنال ۱ ترابایت", "۳", "۴,۲۰۰,۰۰۰", "۱۲,۶۰۰,۰۰۰"]
+      ],
+      isMock: true,
+    };
   }
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
+  const ai = new GoogleGenAI({ apiKey: apiKey });
   
   const prompt = `You are an expert data extraction tool. Your task is to analyze the text provided below, which has been extracted from a PDF document. Identify the primary table or structured data within this text. Convert this data into a structured JSON object.
 
@@ -79,9 +94,12 @@ ${pdfText}
     }
 
 
-    return parsedData as TableData;
+    return { ...parsedData, isMock: false } as TableData;
   } catch (error) {
     console.error("Error calling Gemini API:", error);
-    throw new Error("Failed to process data with AI. The PDF might not contain a clear table, or there was a network issue.");
+    if (error instanceof Error && error.message.includes("API key not valid")) {
+        throw new Error("کلید API ارائه شده نامعتبر است. لطفاً پیکربندی برنامه را بررسی کنید.");
+    }
+    throw new Error("پردازش توسط هوش مصنوعی با خطا مواجه شد. ممکن است PDF شما جدول واضحی نداشته باشد یا مشکل شبکه‌ای وجود داشته باشد.");
   }
 }

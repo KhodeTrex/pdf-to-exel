@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, ChangeEvent, DragEvent } from 'react';
 import { ConversionStatus, TableData } from './types';
 import { convertPdfTextToTableData } from './services/geminiService';
@@ -84,7 +83,15 @@ const FileUpload: React.FC<{ onFilesSelect: (files: File[]) => void; disabled: b
   );
 };
 
-const StatusDisplay: React.FC<{ status: ConversionStatus; error: string | null; onDownload: () => void; onReset: () => void; }> = ({ status, error, onDownload, onReset }) => {
+const StatusDisplay: React.FC<{ 
+    status: ConversionStatus; 
+    error: string | null; 
+    onDownload: () => void; 
+    onReset: () => void; 
+    isDemoMode?: boolean;
+    onDownloadMergedPdf: () => void;
+    onContinueToConvert: () => Promise<void>;
+}> = ({ status, error, onDownload, onReset, isDemoMode, onDownloadMergedPdf, onContinueToConvert }) => {
     const statusConfig = {
         [ConversionStatus.MERGING]: {
             icon: <SpinnerIcon />,
@@ -93,6 +100,14 @@ const StatusDisplay: React.FC<{ status: ConversionStatus; error: string | null; 
             bgColor: "bg-blue-50",
             borderColor: "border-blue-200",
             titleColor: "text-blue-800"
+        },
+        [ConversionStatus.POST_MERGE]: {
+            icon: <CheckCircleIcon />,
+            title: "ادغام با موفقیت انجام شد!",
+            message: "می‌توانید فایل PDF ادغام شده را دانلود کنید، یا برای تبدیل به اکسل ادامه دهید.",
+            bgColor: "bg-green-50",
+            borderColor: "border-green-200",
+            titleColor: "text-green-800"
         },
         [ConversionStatus.PROCESSING]: {
             icon: <SpinnerIcon />,
@@ -129,21 +144,55 @@ const StatusDisplay: React.FC<{ status: ConversionStatus; error: string | null; 
             <p className={`text-2xl font-bold ${currentStatus.titleColor} mt-4`}>{currentStatus.title}</p>
             <p className="text-gray-600 mt-2 break-all">{currentStatus.message}</p>
             
-            {status === ConversionStatus.SUCCESS && (
-                <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4 sm:space-x-reverse mt-6">
-                    <button
-                        onClick={onDownload}
-                        className="flex items-center justify-center w-full sm:w-auto px-6 py-3 text-white bg-green-600 rounded-full hover:bg-green-700 transition-transform transform hover:scale-105 shadow-md"
-                    >
-                        <ExcelIcon />
-                        <span className="mr-2 font-semibold">دانلود فایل اکسل</span>
-                    </button>
+            {status === ConversionStatus.POST_MERGE && (
+                 <div className="flex flex-col items-center w-full mt-6 space-y-3">
+                    <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4 sm:space-x-reverse">
+                        <button
+                            onClick={onDownloadMergedPdf}
+                            className="flex items-center justify-center w-full sm:w-auto px-6 py-3 text-white bg-red-600 rounded-full hover:bg-red-700 transition-transform transform hover:scale-105 shadow-md"
+                        >
+                            <PdfIcon className="text-white !h-6 !w-6"/>
+                            <span className="mr-2 font-semibold">دانلود PDF ادغام شده</span>
+                        </button>
+                        <button
+                            onClick={onContinueToConvert}
+                            className="flex items-center justify-center w-full sm:w-auto px-6 py-3 text-white bg-indigo-600 rounded-full hover:bg-indigo-700 transition-transform transform hover:scale-105 shadow-md"
+                        >
+                            <ExcelIcon />
+                            <span className="mr-2 font-semibold">تبدیل به اکسل (نمایشی)</span>
+                        </button>
+                    </div>
                      <button
                         onClick={onReset}
                         className="w-full sm:w-auto px-6 py-3 text-gray-700 bg-gray-200 rounded-full hover:bg-gray-300 transition-colors font-semibold"
                     >
-                        تبدیل فایل دیگر
+                        شروع مجدد
                     </button>
+                </div>
+            )}
+
+            {status === ConversionStatus.SUCCESS && (
+                <div className="flex flex-col items-center w-full">
+                    <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4 sm:space-x-reverse mt-6">
+                        <button
+                            onClick={onDownload}
+                            className="flex items-center justify-center w-full sm:w-auto px-6 py-3 text-white bg-green-600 rounded-full hover:bg-green-700 transition-transform transform hover:scale-105 shadow-md"
+                        >
+                            <ExcelIcon />
+                            <span className="mr-2 font-semibold">دانلود فایل اکسل</span>
+                        </button>
+                         <button
+                            onClick={onReset}
+                            className="w-full sm:w-auto px-6 py-3 text-gray-700 bg-gray-200 rounded-full hover:bg-gray-300 transition-colors font-semibold"
+                        >
+                            تبدیل فایل دیگر
+                        </button>
+                    </div>
+                    {isDemoMode && (
+                        <p className="mt-4 text-sm text-yellow-800 bg-yellow-100 px-4 py-2 rounded-lg border border-yellow-200">
+                            <b>حالت نمایشی:</b> چون کلید API تنظیم نشده، داده‌های نمونه نمایش داده شده است.
+                        </p>
+                    )}
                 </div>
             )}
             {status === ConversionStatus.ERROR && (
@@ -164,6 +213,9 @@ function App() {
     const [error, setError] = useState<string | null>(null);
     const [excelData, setExcelData] = useState<Blob | null>(null);
     const [finalFileName, setFinalFileName] = useState<string>('converted');
+    const [isDemoMode, setIsDemoMode] = useState(false);
+    const [mergedPdf, setMergedPdf] = useState<File | null>(null);
+
 
     const handleFilesSelect = (selectedFiles: File[]) => {
         setFiles(prevFiles => [...prevFiles, ...selectedFiles]);
@@ -179,10 +231,13 @@ function App() {
         setError(null);
         setExcelData(null);
         setFinalFileName('converted');
+        setIsDemoMode(false);
+        setMergedPdf(null);
     };
     
     const processPdf = useCallback(async (fileToProcess: File) => {
         setStatus(ConversionStatus.PROCESSING);
+        setIsDemoMode(false); 
         try {
             if (typeof pdfjsLib === 'undefined') throw new Error("pdf.js library is not loaded.");
             pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.3.136/pdf.worker.min.mjs`;
@@ -199,6 +254,11 @@ function App() {
             }
 
             const tableData: TableData = await convertPdfTextToTableData(fullText);
+            
+            if (tableData.isMock) {
+                setIsDemoMode(true);
+            }
+
             if (!tableData || !tableData.headers || !tableData.rows) {
                 throw new Error("هوش مصنوعی نتوانست جدول معتبری استخراج کند. لطفاً محتوای PDF را بررسی کنید.");
             }
@@ -209,7 +269,7 @@ function App() {
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
             const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-            const blob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+            const blob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheet.sheet" });
 
             setExcelData(blob);
             setStatus(ConversionStatus.SUCCESS);
@@ -231,26 +291,30 @@ function App() {
             setFinalFileName(files[0].name.split('.').slice(0, -1).join('.'));
             await processPdf(files[0]);
         } else {
-             // Merge multiple files
              setStatus(ConversionStatus.MERGING);
              try {
                 if(typeof pdfLib === 'undefined') throw new Error('pdf-lib is not loaded.');
                 const { PDFDocument } = pdfLib;
-                const mergedPdf = await PDFDocument.create();
+                const mergedPdfDoc = await PDFDocument.create();
 
                 for (const file of files) {
                     const arrayBuffer = await file.arrayBuffer();
                     const pdf = await PDFDocument.load(arrayBuffer);
-                    const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
-                    copiedPages.forEach(page => mergedPdf.addPage(page));
+                    const copiedPages = await mergedPdfDoc.copyPages(pdf, pdf.getPageIndices());
+                    copiedPages.forEach(page => mergedPdfDoc.addPage(page));
                 }
 
-                const mergedPdfBytes = await mergedPdf.save();
+                const mergedPdfBytes = await mergedPdfDoc.save();
                 const mergedPdfBlob = new Blob([mergedPdfBytes], { type: 'application/pdf' });
                 const mergedFile = new File([mergedPdfBlob], "merged.pdf", { type: "application/pdf" });
                 
-                setFinalFileName('merged_files');
-                await processPdf(mergedFile);
+                if (!(typeof process !== 'undefined' && process.env.API_KEY)) {
+                    setMergedPdf(mergedFile);
+                    setStatus(ConversionStatus.POST_MERGE);
+                } else {
+                    setFinalFileName('merged_files');
+                    await processPdf(mergedFile);
+                }
 
              } catch (err: any) {
                 console.error(err);
@@ -259,6 +323,25 @@ function App() {
              }
         }
     }, [files, processPdf]);
+    
+    const handleDownloadMergedPdf = () => {
+        if (!mergedPdf) return;
+        const url = window.URL.createObjectURL(mergedPdf);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'merged_files.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    };
+
+    const handleContinueToConvert = async () => {
+        if (!mergedPdf) return;
+        setFinalFileName('merged_files');
+        await processPdf(mergedPdf);
+    };
+
 
     const handleDownload = () => {
         if (!excelData) return;
@@ -330,7 +413,15 @@ function App() {
                     )}
                     
                     {status !== ConversionStatus.IDLE && (
-                        <StatusDisplay status={status} error={error} onDownload={handleDownload} onReset={resetState} />
+                        <StatusDisplay 
+                            status={status} 
+                            error={error} 
+                            onDownload={handleDownload} 
+                            onReset={resetState} 
+                            isDemoMode={isDemoMode}
+                            onDownloadMergedPdf={handleDownloadMergedPdf}
+                            onContinueToConvert={handleContinueToConvert}
+                        />
                     )}
                 </main>
 

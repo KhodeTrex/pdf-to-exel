@@ -1,7 +1,7 @@
-
 export enum ConversionStatus {
   IDLE,
   MERGING,
+  POST_MERGE,
   PROCESSING,
   SUCCESS,
   ERROR,
@@ -10,4 +10,5 @@ export enum ConversionStatus {
 export interface TableData {
   headers: string[];
   rows: string[][];
+  isMock?: boolean;
 }

@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import type { TableData } from '../types';
 
@@ -24,9 +23,15 @@ const schema = {
 };
 
 export async function convertPdfTextToTableData(pdfText: string): Promise<TableData> {
-  // The API key MUST be obtained from the environment variable `process.env.API_KEY`.
-  // This is the required and secure way to handle API keys.
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // In a browser environment, the API key is passed via a script in index.html.
+  // We explicitly access it from the window object to avoid issues with 'process.env' shims.
+  const apiKey = (window as any).process?.env?.API_KEY;
+
+  if (!apiKey) {
+    throw new Error("حالت کامل فعال نیست: کلید Gemini API در محیط برنامه تنظیم نشده است. لطفاً برای فعال‌سازی، کلید را در متغیرهای محیطی قرار دهید.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
   
   const prompt = `You are an expert data extraction tool. Your task is to analyze the text provided below, which has been extracted from a PDF document. Identify the primary table or structured data within this text. Convert this data into a structured JSON object.
 

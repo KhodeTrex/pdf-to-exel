@@ -1,12 +1,5 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import type { TableData } from '../types';
-
-if (!process.env.API_KEY) {
-  throw new Error("API_KEY environment variable is not set.");
-}
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const schema = {
   type: Type.OBJECT,
@@ -30,6 +23,11 @@ const schema = {
 };
 
 export async function convertPdfTextToTableData(pdfText: string): Promise<TableData> {
+  if (!process.env.API_KEY) {
+    throw new Error("API_KEY environment variable is not set. The application cannot connect to the AI service.");
+  }
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
   const prompt = `You are an expert data extraction tool. Your task is to analyze the text provided below, which has been extracted from a PDF document. Identify the primary table or structured data within this text. Convert this data into a structured JSON object.
 
 The JSON object must contain two keys:

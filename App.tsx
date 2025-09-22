@@ -426,8 +426,7 @@ function App() {
              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-indigo-100 via-purple-50 to-white" style={{clipPath: 'polygon(0 0, 100% 0, 100% 40%, 0 60%)'}}></div>
             <div className="relative z-10 w-full">
                 {mode === 'IDLE' ? <MainSelection onSelectMode={setMode} /> : renderWorkflowUI()}
-                
-                <footer className="text-center mt-12 text-gray-500">
+                <footer className="text-center mt-16 text-gray-500">
                     <p>ساخته شده توسط واحد IT تراز حساب</p>
                     <p className="mt-2 text-sm">تعداد تبدیل‌های موفق: {conversionCount}</p>
                 </footer>

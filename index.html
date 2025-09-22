@@ -27,19 +27,19 @@
   }
 }
 </script>
-<script>
-  // --- IMPORTANT ---
-  // Replace "YOUR_GEMINI_API_KEY" with your actual Google Gemini API key.
-  // This key will be used by all users of the application.
-  window.process = {
-    env: {
-      API_KEY: "YOUR_GEMINI_API_KEY"
-    }
-  };
-</script>
 </head>
   <body>
     <div id="root"></div>
+    <script>
+      // This workaround makes the API key available in a browser environment where process.env is not defined.
+      // WARNING: Exposing API keys on the client-side is a security risk. 
+      // This should be handled by a backend server in a production application.
+      window.process = {
+        env: {
+          API_KEY: 'AIzaSyDeIGBl8PFEo4rCxvKra3mXYJCRlFyr3Vs'
+        }
+      };
+    </script>
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>

@@ -22,15 +22,16 @@ const schema = {
   required: ["headers", "rows"],
 };
 
-// Access the globally available API_KEY, assuming it's set by the environment
-const API_KEY = (window as any).process?.env?.API_KEY;
-
 export async function convertPdfTextToTableData(pdfText: string): Promise<TableData> {
-  if (!API_KEY || API_KEY === "YOUR_GEMINI_API_KEY") {
-    throw new Error("کلید API تنظیم نشده است. لطفاً فایل index.html را ویرایش کرده و کلید Gemini API معتبر خود را در آن قرار دهید.");
+  // In a browser environment, the API key is passed via a script in index.html.
+  // We explicitly access it from the window object to avoid issues with 'process.env' shims.
+  const apiKey = (window as any).process?.env?.API_KEY;
+
+  if (!apiKey) {
+    throw new Error("حالت کامل فعال نیست: کلید Gemini API در محیط برنامه تنظیم نشده است. لطفاً برای فعال‌سازی، کلید را در متغیرهای محیطی قرار دهید.");
   }
 
-  const ai = new GoogleGenAI({ apiKey: API_KEY });
+  const ai = new GoogleGenAI({ apiKey });
   
   const prompt = `You are an expert data extraction tool. Your task is to analyze the text provided below, which has been extracted from a PDF document. Identify the primary table or structured data within this text. Convert this data into a structured JSON object.
 
@@ -108,8 +109,8 @@ ${pdfText}
         }
 
         // Specific message for invalid API keys, if the network request succeeds but auth fails.
-        if (lowerCaseErrorMessage.includes("api key not valid")) {
-            throw new Error("کلید API ارائه شده نامعتبر است. لطفاً با مدیر سیستم تماس بگیرید.");
+        if (error.message.includes("API key not valid")) {
+            throw new Error("کلید API نامعتبر است. لطفاً کلید خود را بررسی کنید یا مطمئن شوید که منقضی نشده باشد.");
         }
         
         // Re-throw any other specific error messages we've crafted inside the try block

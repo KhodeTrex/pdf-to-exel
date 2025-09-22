@@ -30,7 +30,7 @@ export async function convertPdfTextToTableData(pdfText: string): Promise<TableD
     throw new Error("حالت کامل فعال نیست: کلید Gemini API در محیط برنامه تنظیم نشده است. لطفاً برای فعال‌سازی، کلید را در متغیرهای محیطی قرار دهید.");
   }
   
-  const ai = new GoogleGenAI({ apiKey: apiKey });
+  const ai = new GoogleGenAI({ apiKey: AIzaSyDeIGBl8PFEo4rCxvKra3mXYJCRlFyr3Vs });
   
   const prompt = `You are an expert data extraction tool. Your task is to analyze the text provided below, which has been extracted from a PDF document. Identify the primary table or structured data within this text. Convert this data into a structured JSON object.
 

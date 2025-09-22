@@ -1,4 +1,4 @@
-import React, { useState, useCallback, ChangeEvent, DragEvent } from 'react';
+import React, { useState, useCallback, ChangeEvent, DragEvent, useEffect } from 'react';
 import { ConversionStatus, TableData } from './types';
 import { convertPdfTextToTableData } from './services/geminiService';
 import { PdfIcon, ExcelIcon, UploadIcon, SpinnerIcon, ErrorIcon, CheckCircleIcon, LogoIcon, TrashIcon, MergeIcon } from './components/icons';
@@ -182,6 +182,14 @@ function App() {
     const [excelData, setExcelData] = useState<Blob | null>(null);
     const [finalFileName, setFinalFileName] = useState<string>('converted');
     const [mergedPdf, setMergedPdf] = useState<File | null>(null);
+    const [conversionCount, setConversionCount] = useState<number>(0);
+
+    useEffect(() => {
+        const storedCount = localStorage.getItem('conversionCount');
+        if (storedCount) {
+            setConversionCount(parseInt(storedCount, 10) || 0);
+        }
+    }, []);
 
     const handleFilesSelect = (selectedFiles: File[]) => setFiles(prevFiles => [...prevFiles, ...selectedFiles]);
     const removeFile = (index: number) => setFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
@@ -236,6 +244,11 @@ function App() {
 
             setExcelData(blob);
             setStatus(ConversionStatus.SUCCESS);
+            setConversionCount(prevCount => {
+                const newCount = prevCount + 1;
+                localStorage.setItem('conversionCount', String(newCount));
+                return newCount;
+            });
         } catch (err: any) {
             console.error(err);
             setError(err.message || 'یک خطای ناشناخته در هنگام تبدیل رخ داد.');
@@ -415,6 +428,7 @@ function App() {
                 {mode === 'IDLE' ? <MainSelection onSelectMode={setMode} /> : renderWorkflowUI()}
                 <footer className="text-center mt-16 text-gray-500">
                     <p>ساخته شده توسط واحد IT تراز حساب</p>
+                    <p className="mt-2 text-sm">تعداد تبدیل‌های موفق: {conversionCount}</p>
                 </footer>
             </div>
         </div>

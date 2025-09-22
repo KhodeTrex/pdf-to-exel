@@ -6,8 +6,8 @@ export const PdfIcon: React.FC<{className?: string}> = ({ className = "text-red-
     </svg>
 );
 
-export const ExcelIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 20 20" fill="currentColor">
+export const ExcelIcon: React.FC<{className?: string}> = ({ className = "h-6 w-6 text-white" }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
         <path d="M2.992 2.008c.184-1.107 1.08-2 2.18-2h9.656c1.1 0 2 .893 2.18 1.992l.002.008v15.984a2.008 2.008 0 01-2.18 2.008H5.172a2.008 2.008 0 01-2.18-2.008V2.008zM12 10l-2 4h-1.5l2-4H9V9h4v1h-1zm-3-5a1 1 0 00-1 1v1a1 1 0 001 1h2a1 1 0 001-1V6a1 1 0 00-1-1H9z" />
     </svg>
 );
@@ -50,8 +50,8 @@ export const TrashIcon: React.FC = () => (
     </svg>
 );
 
-export const MergeIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+export const MergeIcon: React.FC<{className?: string}> = ({ className = "h-6 w-6" }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
     </svg>
 );

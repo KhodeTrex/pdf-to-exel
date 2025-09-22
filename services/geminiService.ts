@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import type { TableData } from '../types';
 
@@ -26,19 +27,7 @@ export async function convertPdfTextToTableData(pdfText: string): Promise<TableD
   const apiKey = (typeof process !== 'undefined' && process.env.API_KEY) ? process.env.API_KEY : null;
 
   if (!apiKey) {
-    console.warn("API_KEY environment variable is not set. Returning mock data for demonstration purposes.");
-    // Simulate network delay to mimic processing time
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    return {
-      headers: ["شرح کالا", "تعداد", "قیمت واحد (ریال)", "مبلغ کل (ریال)"],
-      rows: [
-        ["مانیتور ۲۴ اینچ", "۲", "۵۰,۰۰۰,۰۰۰", "۱۰۰,۰۰۰,۰۰۰"],
-        ["کیبورد مکانیکی", "۵", "۸,۵۰۰,۰۰۰", "۴۲,۵۰۰,۰۰۰"],
-        ["ماوس بی‌سیم", "۱۰", "۳,۰۰۰,۰۰۰", "۳۰,۰۰۰,۰۰۰"],
-        ["هارد اکسترنال ۱ ترابایت", "۳", "۴,۲۰۰,۰۰۰", "۱۲,۶۰۰,۰۰۰"]
-      ],
-      isMock: true,
-    };
+    throw new Error("حالت کامل فعال نیست: کلید Gemini API در محیط برنامه تنظیم نشده است. لطفاً برای فعال‌سازی، کلید را در متغیرهای محیطی قرار دهید.");
   }
   
   const ai = new GoogleGenAI({ apiKey: apiKey });
@@ -94,7 +83,7 @@ ${pdfText}
     }
 
 
-    return { ...parsedData, isMock: false } as TableData;
+    return parsedData as TableData;
   } catch (error) {
     console.error("Error calling Gemini API:", error);
     if (error instanceof Error && error.message.includes("API key not valid")) {

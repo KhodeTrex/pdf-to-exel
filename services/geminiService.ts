@@ -22,16 +22,15 @@ const schema = {
   required: ["headers", "rows"],
 };
 
-export async function convertPdfTextToTableData(pdfText: string): Promise<TableData> {
-  // In a browser environment, the API key is passed via a script in index.html.
-  // We explicitly access it from the window object to avoid issues with 'process.env' shims.
-  const apiKey = (window as any).process?.env?.API_KEY;
+// Access the globally available API_KEY, assuming it's set by the environment
+const API_KEY = (window as any).process?.env?.API_KEY;
 
-  if (!apiKey) {
-    throw new Error("حالت کامل فعال نیست: کلید Gemini API در محیط برنامه تنظیم نشده است. لطفاً برای فعال‌سازی، کلید را در متغیرهای محیطی قرار دهید.");
+export async function convertPdfTextToTableData(pdfText: string): Promise<TableData> {
+  if (!API_KEY || API_KEY === "YOUR_GEMINI_API_KEY") {
+    throw new Error("کلید API تنظیم نشده است. لطفاً فایل index.html را ویرایش کرده و کلید Gemini API معتبر خود را در آن قرار دهید.");
   }
 
-  const ai = new GoogleGenAI({ apiKey });
+  const ai = new GoogleGenAI({ apiKey: API_KEY });
   
   const prompt = `You are an expert data extraction tool. Your task is to analyze the text provided below, which has been extracted from a PDF document. Identify the primary table or structured data within this text. Convert this data into a structured JSON object.
 
@@ -97,13 +96,28 @@ ${pdfText}
   } catch (error) {
     console.error("Error in Gemini service:", error);
     if (error instanceof Error) {
-        if (error.message.includes("API key not valid")) {
-            throw new Error("کلید API ارائه شده نامعتبر است. لطفاً پیکربندی برنامه را بررسی کنید.");
+        const lowerCaseErrorMessage = error.message.toLowerCase();
+
+        // A generic network error is the most common issue in cross-origin requests.
+        // This can be caused by CORS (due to API key restrictions on referrers/IPs),
+        // a firewall, a proxy, or an actual network failure.
+        if (lowerCaseErrorMessage.includes('failed to fetch') || lowerCaseErrorMessage.includes('networkerror')) {
+            throw new Error(
+                "خطای اتصال: امکان برقراری ارتباط با سرویس هوش مصنوعی وجود ندارد. لطفاً اتصال اینترنت و تنظیمات فایروال خود را بررسی کنید. همچنین، مطمئن شوید کلید API شما برای استفاده از این دامنه یا IP محدود نشده باشد."
+            );
         }
-        // Re-throw the more specific error message from the try block or the original SDK error
+
+        // Specific message for invalid API keys, if the network request succeeds but auth fails.
+        if (lowerCaseErrorMessage.includes("api key not valid")) {
+            throw new Error("کلید API ارائه شده نامعتبر است. لطفاً با مدیر سیستم تماس بگیرید.");
+        }
+        
+        // Re-throw any other specific error messages we've crafted inside the try block
+        // or other unexpected errors from the SDK.
         throw error;
     }
-    // Fallback for non-Error objects
+    
+    // Fallback for non-Error objects being thrown
     throw new Error("پردازش توسط هوش مصنوعی با یک خطای ناشناخته مواجه شد.");
   }
 }

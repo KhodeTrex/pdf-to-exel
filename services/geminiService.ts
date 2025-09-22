@@ -62,7 +62,18 @@ ${pdfText}
     });
 
     const jsonString = response.text;
-    const parsedData = JSON.parse(jsonString);
+
+    if (!jsonString) {
+        throw new Error("هوش مصنوعی پاسخ معتبری برنگرداند. ممکن است محتوای PDF برای استخراج جدول مناسب نباشد.");
+    }
+
+    let parsedData: TableData;
+    try {
+        parsedData = JSON.parse(jsonString);
+    } catch (parseError) {
+        console.error("Failed to parse AI response as JSON. Response text:", jsonString);
+        throw new Error("هوش مصنوعی پاسخی با فرمت نامعتبر ارسال کرد. لطفاً دوباره تلاش کنید یا فایل دیگری را امتحان کنید.");
+    }
 
     // Basic validation to ensure the structure matches TableData
     if (
@@ -70,26 +81,29 @@ ${pdfText}
       !Array.isArray(parsedData.headers) ||
       !Array.isArray(parsedData.rows)
     ) {
-      throw new Error("Invalid data structure returned from AI.");
+      throw new Error("ساختار داده‌های دریافت شده از هوش مصنوعی نامعتبر است. پاسخ فاقد 'headers' یا 'rows' بود.");
     }
     
     // Ensure all rows have the same number of columns as headers
     const headerCount = parsedData.headers.length;
-    const isValid = parsedData.rows.every((row: any) => Array.isArray(row) && row.length === headerCount);
+    const areRowsValid = parsedData.rows.every((row: any) => Array.isArray(row) && row.length === headerCount);
 
-    if (!isValid) {
-        console.warn("AI returned rows with inconsistent column counts. The data might be misaligned.");
-        // We can still return it and let the user decide, or throw an error.
-        // For robustness, let's proceed.
+    if (headerCount > 0 && !areRowsValid) {
+        console.warn("AI returned rows with inconsistent column counts.", { headerCount, rows: parsedData.rows });
+        throw new Error("هوش مصنوعی جدولی با تعداد ستون‌های ناهماهنگ در ردیف‌ها برگرداند. این ممکن است به دلیل پیچیدگی جدول باشد.");
     }
 
-
-    return parsedData as TableData;
+    return parsedData;
   } catch (error) {
-    console.error("Error calling Gemini API:", error);
-    if (error instanceof Error && error.message.includes("API key not valid")) {
-        throw new Error("کلید API ارائه شده نامعتبر است. لطفاً پیکربندی برنامه را بررسی کنید.");
+    console.error("Error in Gemini service:", error);
+    if (error instanceof Error) {
+        if (error.message.includes("API key not valid")) {
+            throw new Error("کلید API ارائه شده نامعتبر است. لطفاً پیکربندی برنامه را بررسی کنید.");
+        }
+        // Re-throw the more specific error message from the try block or the original SDK error
+        throw error;
     }
-    throw new Error("پردازش توسط هوش مصنوعی با خطا مواجه شد. ممکن است PDF شما جدول واضحی نداشته باشد یا مشکل شبکه‌ای وجود داشته باشد.");
+    // Fallback for non-Error objects
+    throw new Error("پردازش توسط هوش مصنوعی با یک خطای ناشناخته مواجه شد.");
   }
 }

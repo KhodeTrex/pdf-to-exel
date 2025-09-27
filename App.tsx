@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, ChangeEvent, DragEvent, useEffect } from 'react';
 import { ConversionStatus, TableData } from './types';
 import { convertPdfTextToTableData } from './services/geminiService';
@@ -36,7 +37,8 @@ const FileUpload: React.FC<{ onFilesSelect: (files: File[]) => void; disabled: b
     
     const files = e.dataTransfer.files;
     if (files && files.length > 0) {
-      const pdfFiles = Array.from(files).filter(file => file.type === 'application/pdf');
+      // FIX: Explicitly type `file` as `File` to resolve TypeScript error.
+      const pdfFiles = Array.from(files).filter((file: File) => file.type === 'application/pdf');
       if (pdfFiles.length > 0) {
         onFilesSelect(pdfFiles);
       }
@@ -45,7 +47,8 @@ const FileUpload: React.FC<{ onFilesSelect: (files: File[]) => void; disabled: b
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const pdfFiles = Array.from(e.target.files).filter(file => file.type === 'application/pdf');
+      // FIX: Explicitly type `file` as `File` to resolve TypeScript error.
+      const pdfFiles = Array.from(e.target.files).filter((file: File) => file.type === 'application/pdf');
        if (pdfFiles.length > 0) {
         onFilesSelect(pdfFiles);
       }
@@ -273,7 +276,7 @@ function App() {
 
                 for (const file of files) {
                     const arrayBuffer = await file.arrayBuffer();
-                    const pdf = await PDFDocument.load(arrayBuffer);
+                    const pdf = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
                     const copiedPages = await mergedPdfDoc.copyPages(pdf, pdf.getPageIndices());
                     copiedPages.forEach(page => mergedPdfDoc.addPage(page));
                 }
@@ -303,7 +306,7 @@ function App() {
 
             for (const file of files) {
                 const arrayBuffer = await file.arrayBuffer();
-                const pdf = await PDFDocument.load(arrayBuffer);
+                const pdf = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
                 const copiedPages = await mergedPdfDoc.copyPages(pdf, pdf.getPageIndices());
                 copiedPages.forEach(page => mergedPdfDoc.addPage(page));
             }

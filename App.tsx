@@ -7,7 +7,7 @@ import { PdfIcon, ExcelIcon, UploadIcon, SpinnerIcon, ErrorIcon, CheckCircleIcon
 // Make libraries available from global scope (loaded via CDN)
 declare const pdfjsLib: any;
 declare const XLSX: any;
-declare const pdfLib: any;
+declare const PDFLib: any;
 
 const FileUpload: React.FC<{ onFilesSelect: (files: File[]) => void; disabled: boolean, multiple?: boolean, description?: string }> = ({ onFilesSelect, disabled, multiple = true, description }) => {
   const [isDragging, setIsDragging] = useState(false);
@@ -270,8 +270,8 @@ function App() {
         } else {
              setStatus(ConversionStatus.MERGING);
              try {
-                if(typeof pdfLib === 'undefined') throw new Error('pdf-lib is not loaded.');
-                const { PDFDocument } = pdfLib;
+                if(typeof PDFLib === 'undefined') throw new Error('pdf-lib is not loaded.');
+                const { PDFDocument } = PDFLib;
                 const mergedPdfDoc = await PDFDocument.create();
 
                 for (const file of files) {
@@ -300,8 +300,8 @@ function App() {
         setError(null);
         setStatus(ConversionStatus.MERGING);
          try {
-            if(typeof pdfLib === 'undefined') throw new Error('pdf-lib is not loaded.');
-            const { PDFDocument } = pdfLib;
+            if(typeof PDFLib === 'undefined') throw new Error('pdf-lib is not loaded.');
+            const { PDFDocument } = PDFLib;
             const mergedPdfDoc = await PDFDocument.create();
 
             for (const file of files) {
